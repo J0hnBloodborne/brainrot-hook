@@ -3,11 +3,11 @@
 #   brainrot off     disarm it
 #   brainrot status  show state
 #   brainrot hook    prompt-submit hook; if armed, switches to the open Reels tab or opens one
-#   brainrot back    stop hook; returns to the window and Chrome tabs that were in front before `hook`
+#   brainrot back    stop hook; refocuses the window that was in front before `hook`
 param([string]$Action = 'status')
 
 $flag = Join-Path $env:USERPROFILE '.brainrot-on'
-$saved = Join-Path $env:USERPROFILE '.brainrot-return.json'
+$saved = Join-Path $env:USERPROFILE '.brainrot-return'
 $url = 'https://www.instagram.com/reels/'
 
 Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
@@ -53,28 +53,13 @@ function Focus-Window([IntPtr]$h) {
     [void][Brainrot.Win]::SetForegroundWindow($h)
 }
 
-function Save-Return {
-    $tabs = foreach ($win in Get-ChromeWindows) {
-        foreach ($tab in Get-Tabs $win) {
-            if ($tab.GetCurrentPattern($selPattern).Current.IsSelected) {
-                @{ win = $win.Current.NativeWindowHandle; name = $tab.Current.Name }
-            }
-        }
-    }
-    @{ fg = [int64][Brainrot.Win]::GetForegroundWindow(); tabs = @($tabs) } | ConvertTo-Json -Depth 3 | Set-Content $saved
-}
+function Save-Return { [int64][Brainrot.Win]::GetForegroundWindow() | Set-Content $saved }
 
 function Restore-Return {
     if (-not (Test-Path $saved)) { return }
-    $state = Get-Content $saved -Raw | ConvertFrom-Json
+    $h = [int64](Get-Content $saved -Raw)
     Remove-Item $saved
-    foreach ($win in Get-ChromeWindows) {
-        $want = $state.tabs | Where-Object { $_.win -eq $win.Current.NativeWindowHandle }
-        if (-not $want) { continue }
-        $tab = Get-Tabs $win | Where-Object { $_.Current.Name -eq $want.name } | Select-Object -First 1
-        if ($tab) { $tab.GetCurrentPattern($selPattern).Select() }
-    }
-    Focus-Window ([IntPtr]$state.fg)
+    Focus-Window ([IntPtr]$h)
 }
 
 function Open-Reels {

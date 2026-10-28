@@ -2,7 +2,7 @@
 
 Opens Instagram Reels in Chrome while Claude Code or Codex works on your prompt, and switches back when the response is done. Windows only.
 
-When you submit a prompt, the hook saves the window you are in and the front tab of each Chrome window. It then switches to an open Instagram tab, or opens Reels in a new tab if none is open. When the agent stops, it restores those tabs and focuses your original window.
+When you submit a prompt, the hook saves the window you are in. It then switches to an open Instagram tab, or opens Reels in a new tab if none is open. When the agent stops, it focuses your original window again. Reels stays as Chrome's front tab.
 
 It does nothing until you turn it on.
 
